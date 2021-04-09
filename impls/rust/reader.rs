@@ -75,7 +75,6 @@ fn read_atom(reader: &mut Reader<std::vec::IntoIter<String>>) -> Result<MalVal> 
         "nil" => Ok(MalVal::Nil),
         "true" => Ok(MalVal::Bool(true)),
         "false" => Ok(MalVal::Bool(false)),
-        token if token.chars().all(char::is_alphabetic) => Ok(MalVal::Str(token.to_string())),
         _ => Ok(MalVal::Symbol(token.clone())),
     }
 }

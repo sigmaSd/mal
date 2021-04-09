@@ -132,31 +132,42 @@ fn rep(s: String) -> Result<String> {
     let eval_ast = EVAL(ast, &repl_env)?;
     Ok(PRINT(eval_ast))
 }
-
 // tests
 #[test]
 fn integration() {
     // (+ 1 2) -> ['',(+ 1 2)]
-    dbg!(READ("(+ 1 2)".into()));
+    assert_eq!(
+        READ("(+ 1 2)".into()).unwrap(),
+        MalVal::List(vec![
+            MalVal::Symbol("+".into()),
+            MalVal::Int(1),
+            MalVal::Int(2)
+        ])
+    );
 }
 
 #[test]
 fn unterminated_quotes() {
-    dbg!(READ("\"abc".into()));
+    let test = READ("\"abc".into());
+    assert!(test.is_err());
+    assert!(unwrap!(test, Result::Err).to_string().contains("EOF"));
 }
 
 #[test]
 fn backslash() {
-    dbg!(READ("\"\\\\\"".into()));
+    assert_eq!(READ("\"\\\\\"".into()).unwrap(), MalVal::Str("\\\\".into()));
 }
 
 #[test]
 fn quote_plus_one() {
-    dbg!(READ("'1".into()));
+    assert_eq!(
+        READ("'1".into()).unwrap(),
+        MalVal::List(vec!(MalVal::Symbol("'".into()), MalVal::Int(1)))
+    );
 }
 
 #[test]
 fn presendence() {
     let s = "(- (+ 5 (* 2 3)) 3)".into();
-    dbg!(rep(s));
+    assert_eq!(rep(s).unwrap(), "8");
 }

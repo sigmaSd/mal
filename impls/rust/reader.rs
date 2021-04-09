@@ -1,6 +1,5 @@
 use crate::error;
 use crate::types::MalVal;
-use crate::unwrap;
 use crate::Result;
 use std::collections::HashMap;
 use std::iter::Peekable;
@@ -215,20 +214,51 @@ fn tokenize(s: String) -> Result<Vec<String>> {
 
 #[test]
 fn tokenize_test() {
-    dbg!(tokenize("    ".into()));
-    dbg!(tokenize("~@".into()));
-    dbg!(tokenize("[hello](world)'".into()));
-    dbg!(tokenize(";test".into()));
+    assert_eq!(tokenize("    ".to_string()).unwrap(), Vec::<String>::new());
+    assert_eq!(tokenize("~@".into()).unwrap(), ["~@"]);
+    assert_eq!(
+        tokenize("[hello](world)'".to_string()).unwrap(),
+        ["[", "hello", "]", "(", "world", ")", "'"]
+    );
+    assert_eq!(tokenize(";test".into()).unwrap(), [";test"]);
 }
 
 #[test]
 fn hashmap() {
     let s = "{\"a\" (+ 7 8)}".into();
-    dbg!(read_str(s));
+    assert_eq!(
+        read_str(s).unwrap(),
+        MalVal::Hash(
+            vec![(
+                "\"a\"".to_string(),
+                MalVal::List(vec!(
+                    MalVal::Symbol("+".into()),
+                    MalVal::Int(7),
+                    MalVal::Int(8)
+                ))
+            )]
+            .into_iter()
+            .collect()
+        )
+    );
 }
 
 #[test]
 fn unicode() {
     let s = "{:a (+ 7 8)}";
-    dbg!(read_str(s.into()));
+    assert_eq!(
+        read_str(s.into()).unwrap(),
+        MalVal::Hash(
+            vec![(
+                ":a".to_string(),
+                MalVal::List(vec!(
+                    MalVal::Symbol("+".into()),
+                    MalVal::Int(7),
+                    MalVal::Int(8)
+                ))
+            )]
+            .into_iter()
+            .collect()
+        )
+    );
 }

@@ -16,6 +16,17 @@ macro_rules! error {
     };
 }
 
+#[macro_export]
+macro_rules! unwrap {
+    ($var: expr, $varient: path) => {
+        if let $varient(var) = $var {
+            var
+        } else {
+            unreachable!();
+        }
+    };
+}
+
 fn main() -> Result<()> {
     let mut input = String::new();
     loop {
@@ -47,20 +58,32 @@ fn rep(s: String) -> String {
 #[test]
 fn integration() {
     // (+ 1 2) -> ['',(+ 1 2)]
-    dbg!(READ("(+ 1 2)".into()));
+    assert_eq!(
+        READ("(+ 1 2)".into()).unwrap(),
+        MalVal::List(vec![
+            MalVal::Symbol("+".into()),
+            MalVal::Int(1),
+            MalVal::Int(2)
+        ])
+    );
 }
 
 #[test]
 fn unterminated_quotes() {
-    dbg!(READ("\"abc".into()));
+    let test = READ("\"abc".into());
+    assert!(test.is_err());
+    assert!(unwrap!(test, Result::Err).to_string().contains("EOF"));
 }
 
 #[test]
 fn backslash() {
-    dbg!(READ("\"\\\\\"".into()));
+    assert_eq!(READ("\"\\\\\"".into()).unwrap(), MalVal::Str("\\\\".into()));
 }
 
 #[test]
 fn quote_plus_one() {
-    dbg!(READ("'1".into()));
+    assert_eq!(
+        READ("'1".into()).unwrap(),
+        MalVal::List(vec!(MalVal::Symbol("'".into()), MalVal::Int(1)))
+    );
 }

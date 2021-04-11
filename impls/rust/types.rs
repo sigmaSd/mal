@@ -1,5 +1,7 @@
+use crate::env::Env;
 use crate::unwrap;
-use std::{collections::HashMap, fmt::Display};
+use crate::Result;
+use std::{collections::HashMap, fmt::Display, rc::Rc};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum MalVal {
@@ -12,7 +14,31 @@ pub enum MalVal {
     List(Vec<MalVal>),
     Vector(Vec<MalVal>),
     Hash(HashMap<String, MalVal>),
-    Func(fn(Vec<MalVal>) -> MalVal),
+    Func(Closure),
+}
+pub type ClosureType = Rc<dyn Fn(Vec<MalVal>, Env) -> Result<MalVal>>;
+pub struct Closure(pub ClosureType);
+impl std::fmt::Debug for Closure {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("function")
+    }
+}
+impl PartialEq for Closure {
+    fn eq(&self, other: &Closure) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+impl Clone for Closure {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl From<ClosureType> for Closure {
+    fn from(c: ClosureType) -> Self {
+        Self(c)
+    }
 }
 
 macro_rules! impl_ops {
@@ -84,9 +110,7 @@ impl Display for MalVal {
                 f.write_char('}')?;
                 Ok(())
             }
-            MalVal::Func(_) => {
-                unreachable!();
-            }
+            MalVal::Func(_fun) => f.write_str("#<function>"),
             MalVal::Nil => {
                 unreachable!()
             }

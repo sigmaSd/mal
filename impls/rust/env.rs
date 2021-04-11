@@ -1,5 +1,5 @@
-use crate::types::MalVal;
 use crate::Result;
+use crate::{types::MalVal, unwrap};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -19,6 +19,16 @@ impl Env {
             data: HashMap::new(),
             outer,
         })))
+    }
+    pub fn new_with_bindings(outer: Option<Env>, binds: MalVal, exprs: Vec<MalVal>) -> Self {
+        let mut data = HashMap::new();
+        let binds = unwrap!(binds, MalVal::List);
+        for (key, val) in binds.into_iter().zip(exprs.into_iter()) {
+            let key = unwrap!(key, MalVal::Symbol);
+            data.insert(key, val);
+        }
+
+        Env(Rc::new(RefCell::new(_Env { data, outer })))
     }
     pub fn set(&self, key: String, val: MalVal) -> MalVal {
         self.0.borrow_mut().data.insert(key, val.clone());
